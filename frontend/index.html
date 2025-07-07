@@ -132,7 +132,7 @@
 
     async function loadProducts(page = 1) {
       try {
-        const res = await fetch(`http://localhost:5000/api/products?page=${page}&limit=${limit}`, {
+        const res = await fetch(`https://ecommerce-app-quk6.onrender.com/api/products?page=${page}&limit=${limit}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -180,7 +180,7 @@
 
     async function addToCart(productId) {
       try {
-        const res = await fetch('http://localhost:5000/api/cart', {
+        const res = await fetch('https://ecommerce-app-quk6.onrender.com/api/cart', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

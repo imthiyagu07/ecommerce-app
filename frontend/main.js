@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const role = document.getElementById('role').value;
 
       try {
-        const res = await fetch('http://localhost:5000/api/signup', {
+        const res = await fetch('https://ecommerce-app-quk6.onrender.com/api/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password, role }),
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = document.getElementById('password').value;
 
       try {
-        const res = await fetch('http://localhost:5000/api/login', {
+        const res = await fetch('https://ecommerce-app-quk6.onrender.com/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),

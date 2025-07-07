@@ -126,7 +126,7 @@
     }
 
     async function loadProducts() {
-      const res = await fetch('http://localhost:5000/api/products', {
+      const res = await fetch('https://ecommerce-app-quk6.onrender.com/api/products', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const products = await res.json();
@@ -155,8 +155,8 @@
       const payload = { name, category, price };
 
       const url = updateProductId
-        ? `http://localhost:5000/api/products/${updateProductId}`
-        : 'http://localhost:5000/api/products';
+        ? `https://ecommerce-app-quk6.onrender.com/api/products/${updateProductId}`
+        : 'https://ecommerce-app-quk6.onrender.com/api/products';
 
       const method = updateProductId ? 'PUT' : 'POST';
 
@@ -194,7 +194,7 @@
     async function deleteProduct(id) {
       if (!confirm('Delete this product?')) return;
 
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`https://ecommerce-app-quk6.onrender.com/api/products/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
