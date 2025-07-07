@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product List</title>
+  <style>
+    body {
+      background: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 30px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 15px;
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: #1f1f1f;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+    }
+
+    .product-card h3 {
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .product-card p {
+      color: #ccc;
+      margin-bottom: 12px;
+    }
+
+    .product-card button {
+      padding: 10px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .product-card button:hover {
+      background-color: #218838;
+    }
+
+    #pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    #pagination button {
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    #pagination button:hover {
+      background-color: #0056b3;
+    }
+
+    #page-info {
+      font-size: 16px;
+      color: #ccc;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Products</h1>
+    <nav>
+      <a href="cart.html">Cart</a>
+      <a href="orders.html">Orders</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+  </header>
+
+  <div class="product-grid" id="product-list">Loading products...</div>
+
+  <div id="pagination" style="text-align: center; margin-top: 20px;">
+    <button onclick="prevPage()">prev</button>
+    <span id="page-info"></span>
+    <button onclick="nextPage()">Next</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'signup.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = 'login.html';
+    }
+
+    let currentPage = 1;
+    const limit = 4;
+
+    async function loadProducts(page = 1) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/products?page=${page}&limit=${limit}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const products = await res.json();
+        const list = document.getElementById('product-list');
+        const pageInfo = document.getElementById('page-info');
+
+        if (!products.length && page > 1) {
+          currentPage--;
+          return loadProducts(currentPage);
+        }
+
+        if (products.length === 0) {
+          list.innerHTML = '<p>No products found.</p>';
+        } else {
+          list.innerHTML = products.map(p => `
+            <div class="product-card">
+              <h3>${p.name}</h3>
+              <p>${p.category} - ₹${p.price}</p>
+              <button onclick="addToCart('${p._id}')">Add to Cart</button>
+            </div>
+          `).join('');
+        }
+
+        pageInfo.textContent = `Page ${page}`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('product-list').innerHTML = '<p>Error loading products</p>';
+      }
+    }
+
+    function nextPage() {
+      currentPage++;
+      loadProducts(currentPage);
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        loadProducts(currentPage);
+      }
+    }
+
+    async function addToCart(productId) {
+      try {
+        const res = await fetch('http://localhost:5000/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ productId, quantity: 1 })
+        });
+
+        if (res.ok) {
+          alert('Product added to cart!');
+        } else {
+          const data = await res.json();
+          alert(data.message || 'Failed to add product.');
+        }
+      } catch (err) {
+        alert('Request failed.');
+        console.error(err);
+      }
+    }
+
+    loadProducts(currentPage);
+  </script>
+</body>
+</html>
+

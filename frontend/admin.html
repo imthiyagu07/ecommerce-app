@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      background: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 15px;
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .product-form, .product-list {
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+
+    input {
+      width: calc(100% - 24px);
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #2c2c2c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .product-card {
+      border-bottom: 1px solid #333;
+      padding: 10px 0;
+    }
+
+    .product-card span {
+      display: block;
+      margin: 4px 0;
+    }
+
+    .product-card button {
+      margin-right: 10px;
+      background: #e74c3c;
+    }
+
+    .product-card button.edit {
+      background: #f39c12;
+    }
+
+    .product-card button:hover {
+      opacity: 0.9;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Panel</h1>
+    <nav>
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+  </header>
+
+  <div class="product-form">
+    <h2>Add / Update Product</h2>
+    <input type="text" id="name" placeholder="Product Name" />
+    <input type="text" id="category" placeholder="Category" />
+    <input type="number" id="price" placeholder="Price" />
+    <button id="submitBtn" onclick="handleSubmit()">Add Product</button>
+  </div>
+
+  <div class="product-list">
+    <h2>All Products</h2>
+    <div id="product-list">Loading...</div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (!token || role !== 'admin') {
+      alert('Access denied. Admins only.');
+      window.location.href = 'login.html';
+    }
+
+    let updateProductId = null;
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = 'login.html';
+    }
+
+    async function loadProducts() {
+      const res = await fetch('http://localhost:5000/api/products', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const products = await res.json();
+      const list = document.getElementById('product-list');
+      list.innerHTML = '';
+
+      products.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product-card';
+        div.innerHTML = `
+          <span><strong>${p.name}</strong></span>
+          <span>Category: ${p.category}</span>
+          <span>Price: ₹${p.price}</span>
+          <button class="edit" onclick="editProduct('${p._id}', '${p.name}', '${p.category}', ${p.price})">Edit</button>
+          <button onclick="deleteProduct('${p._id}')">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function handleSubmit() {
+      const name = document.getElementById('name').value;
+      const category = document.getElementById('category').value;
+      const price = document.getElementById('price').value;
+
+      const payload = { name, category, price };
+
+      const url = updateProductId
+        ? `http://localhost:5000/api/products/${updateProductId}`
+        : 'http://localhost:5000/api/products';
+
+      const method = updateProductId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert(updateProductId ? 'Product updated' : 'Product added');
+        updateProductId = null;
+        document.getElementById('submitBtn').textContent = 'Add Product';
+        document.getElementById('name').value = '';
+        document.getElementById('category').value = '';
+        document.getElementById('price').value = '';
+        loadProducts();
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Operation failed');
+      }
+    }
+
+    function editProduct(id, name, category, price) {
+      updateProductId = id;
+      document.getElementById('name').value = name;
+      document.getElementById('category').value = category;
+      document.getElementById('price').value = price;
+      document.getElementById('submitBtn').textContent = 'Update Product';
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product?')) return;
+
+      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        alert('Product deleted');
+        loadProducts();
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Delete failed');
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
+

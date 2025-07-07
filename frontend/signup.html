@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Signup</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+      display: grid;
+      place-items: center;
+    }
+    form {
+      max-width: 400px;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+    input{
+      width: 380px;
+    }
+    select, button{
+      width: 400px;
+    }
+    input, select, button {
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    input, select {
+      background: #2c2c2c;
+      color: white;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Sign Up</h2>
+  <form id="signup-form">
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <select id="role">
+      <option value="customer">Customer</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button type="submit">Sign Up</button>
+  </form>
+  <script src="main.js"></script>
+</body>
+</html>
+
+

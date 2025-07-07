@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Cart</title>
+  <style>
+    body {
+      background: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 15px;
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .cart-item {
+      background: #1f1f1f;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+    }
+
+    .cart-item h3 {
+      margin: 0 0 8px 0;
+    }
+
+    .cart-item p {
+      margin: 0;
+      color: #ccc;
+    }
+
+    .empty {
+      text-align: center;
+      margin-top: 50px;
+      color: #aaa;
+    }
+
+    .place-order-btn {
+      display: block;
+      margin: 30px auto;
+      padding: 12px 24px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .remove-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .remove-btn:hover {
+      background: #d93636;
+    }
+
+    .place-order-btn:hover {
+      background: #0056b3;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Cart</h1>
+    <nav>
+      <a href="index.html">Products</a>
+      <a href="orders.html">Orders</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+  </header>
+
+  <div id="cart-list">Loading your cart...</div>
+
+  <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = 'login.html';
+    }
+
+    async function removeItem(productId) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          alert('Item removed!');
+          loadCart(); // Refresh the cart
+        } else {
+          const data = await res.json();
+          alert(data.message || 'Failed to remove item.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error removing item.');
+      }
+    }
+
+    async function updateQuantity(productId, change) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ change })
+        });
+
+        if (res.ok) {
+          loadCart(); // Refresh cart
+        } else {
+          const data = await res.json();
+          alert(data.message || 'Failed to update quantity');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error updating quantity.');
+      }
+    }
+
+
+    async function loadCart() {
+      try {
+        const res = await fetch('http://localhost:5000/api/cart', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        const container = document.getElementById('cart-list');
+
+        if (!data.items || data.items.length === 0) {
+          container.innerHTML = '<div class="empty">Your cart is empty.</div>';
+          return;
+        }
+
+        container.innerHTML = data.items.map(item => `
+          <div class="cart-item">
+            <h3>${item.product.name}</h3>
+            <p>Category: ${item.product.category}</p>
+            <p>Price: ₹${item.product.price}</p>
+            <p>
+              Quantity: 
+              <button onclick="updateQuantity('${item.product._id}', -1)">-</button>
+              ${item.quantity}
+              <button onclick="updateQuantity('${item.product._id}', 1)">+</button>
+            </p>
+            <button onclick="removeItem('${item.product._id}')" class="remove-btn">Remove</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('cart-list').innerHTML = '<p class="empty">Error loading cart.</p>';
+      }
+    }
+
+    async function placeOrder() {
+      try {
+        const res = await fetch('http://localhost:5000/api/orders', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          alert('Order placed successfully!');
+          window.location.href = 'orders.html';
+        } else {
+          const data = await res.json();
+          alert(data.message || 'Failed to place order.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error placing order.');
+      }
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

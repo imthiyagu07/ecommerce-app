@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Orders</title>
+  <style>
+    body {
+      background: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 15px;
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .order-card {
+      background: #1f1f1f;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+    }
+
+    .order-card h3 {
+      margin: 0 0 10px 0;
+      color: #03a9f4;
+    }
+
+    .order-items {
+      padding-left: 20px;
+    }
+
+    .order-items li {
+      color: #ccc;
+      margin-bottom: 6px;
+    }
+
+    .empty {
+      text-align: center;
+      margin-top: 50px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Orders</h1>
+    <nav>
+      <a href="index.html">Products</a>
+      <a href="cart.html">Cart</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+  </header>
+
+  <div id="orders-list">Loading your orders...</div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = 'login.html';
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('http://localhost:5000/api/orders', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const orders = await res.json();
+        const container = document.getElementById('orders-list');
+
+        if (!orders.length) {
+          container.innerHTML = '<div class="empty">You have no orders yet.</div>';
+          return;
+        }
+
+        container.innerHTML = orders.map((order, index) => `
+          <div class="order-card">
+            <h3>Order #${index + 1}</h3>
+            <ul class="order-items">
+              ${order.items.map(item => `
+                <li>${item.product.name} x ${item.quantity} — ₹${item.product.price}</li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('orders-list').innerHTML = '<p class="empty">Error loading orders.</p>';
+      }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>
